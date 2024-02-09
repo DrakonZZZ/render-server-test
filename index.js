@@ -4,43 +4,32 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use(express.static('dist'));
 let data = [
   {
     id: 1,
-    content: 'HTML is easy',
+    content: 'Leon-kennedy',
     important: true,
   },
   {
     id: 2,
-    content: 'Browser can execute only JavaScript',
+    content: 'Chris Redfield',
     important: false,
   },
   {
     id: 3,
-    content: 'GET and POST are the most important methods of HTTP protocol',
+    content: 'Claire Redfield',
     important: true,
   },
 ];
 
 app.get('/', (req, res) => res.send('api working!'));
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/character', (req, res) => {
   res.send(data);
 });
 
-app.get('/api/info', (req, res) => {
-  const totalInfo = data.length;
-  const infoHtml = `
-      <div>
-        <p>Phonebook has info for ${totalInfo} people</p>
-        <p>${new Date()}</p>
-      </div>
-    `;
-  res.send(infoHtml);
-});
-
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/character/:id', (req, res) => {
   const id = req.params.id;
   const newInfo = data.find((person) => person.id === +id);
   if (newInfo) {
@@ -50,18 +39,19 @@ app.get('/api/persons/:id', (req, res) => {
   }
 });
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/character/:id', (req, res) => {
   const id = req.params.id;
   data = data.filter((person) => person.id !== id);
   res.status(204).end();
 });
 
 const generateId = () => {
-  const maxId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) : 0;
+  const maxId =
+    character.length > 0 ? Math.max(...character.map((n) => n.id)) : 0;
   return maxId + 1;
 };
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/character', (req, res) => {
   const body = req.body;
 
   if (!body.content) {
