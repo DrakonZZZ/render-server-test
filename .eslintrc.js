@@ -3,6 +3,7 @@ module.exports = {
     browser: true,
     commonjs: true,
     node: true,
+    jest: true,
   },
   plugins: ['@stylistic/js'],
   extends: 'eslint:recommended',

@@ -37,7 +37,7 @@ charactersRoute.post('/', (req, res, next) => {
   character
     .save()
     .then((saveChar) => {
-      res.json(saveChar);
+      res.status(201).json(saveChar);
     })
     .catch((error) => next(error));
 });
