@@ -1,17 +1,4 @@
-const mongoose = require('mongoose')
-
-mongoose.set('strictQuery', false)
-
-const url = process.env.MONGODB_URI
-
-console.log('connecing to', url)
-
-mongoose
-  .connect(url)
-  .then(() => console.log('connnected to mongoDB'))
-  .catch((error) => {
-    console.log('error connecting to MongoDB:', error.message)
-  })
+const mongoose = require('mongoose');
 
 const characterSchema = new mongoose.Schema({
   content: {
@@ -20,14 +7,14 @@ const characterSchema = new mongoose.Schema({
     required: true,
   },
   important: Boolean,
-})
+});
 
 characterSchema.set('toJSON', {
   transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString()
-    delete returnedObject._id
-    delete returnedObject.__v
+    returnedObject.id = returnedObject._id.toString();
+    delete returnedObject._id;
+    delete returnedObject.__v;
   },
-})
+});
 
-module.exports = mongoose.model('Character', characterSchema)
+module.exports = mongoose.model('Character', characterSchema);

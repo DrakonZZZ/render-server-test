@@ -1,97 +1,34 @@
-require('dotenv').config()
-const express = require('express')
-const app = express()
-const cors = require('cors')
-const Character = require('./models/character')
+const config = require('./utils/config');
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const characterRouter = require('./controllers/character');
+const logger = require('./utils/logger');
+const middleware = require('./utils/middleware');
+const mongoose = require('mongoose');
 
-app.use(cors())
-app.use(express.json())
-app.use(express.static('dist'))
+mongoose.set('strictQuery', false);
 
-app.get('/', (req, res) => res.send('api working!'))
+const url = process.env.MONGODB_URI;
 
-app.get('/api/character', (req, res) => {
-  Character.find({}).then((char) => {
-    res.json(char)
-  })
-})
+logger.info('connecing to', url);
 
-app.get('/api/character/:id', (req, res, next) => {
-  const id = req.params.id
-  Character.findById(id)
-    .then((char) => {
-      if (char) {
-        res.json(char)
-      } else {
-        res.status(404).end()
-      }
-    })
-    .catch((error) => next(error))
-})
+mongoose
+  .connect(url)
+  .then(() => logger.info('connnected to mongoDB'))
+  .catch((error) => {
+    logger.error('error connecting to MongoDB:', error.message);
+  });
 
-app.post('/api/character', (req, res, next) => {
-  const body = req.body
+app.use(cors());
+app.use(express.static('dist'));
+app.use(express.json());
 
-  if (!body.content) {
-    return res.status(400).json({
-      error: 'content missing',
-    })
-  }
+app.use('/api/character', characterRouter);
 
-  const character = new Character({
-    content: body.content,
-    important: body.important || false,
-  })
+app.use(middleware.requestLogger);
+app.use(middleware.unknownEndPoint);
+app.use(middleware.errorHandler);
 
-  character
-    .save()
-    .then((saveChar) => {
-      res.json(saveChar)
-    })
-    .catch((error) => next(error))
-})
-
-app.put('/api/characters/:id', (req, res, next) => {
-  const body = req.body
-
-  const char = {
-    content: body.content,
-    important: body.important,
-  }
-
-  Character.findByIdAndUpdate(req.params.id, char, { new: true })
-    .then((updateChar) => {
-      res.json(updateChar)
-    })
-    .catch((error) => next(error))
-})
-
-app.delete('/api/character/:id', (req, res, next) => {
-  Character.findByIdAndDelete(req.params.id)
-    .then((result) => {
-      console.log(result)
-      res.status(204).end()
-    })
-    .catch((error) => next(error))
-})
-
-const unknownEndPoint = (req, res) => {
-  res.status(404).send({ error: 'unknow endpoint' })
-}
-app.use(unknownEndPoint)
-
-const errorHandler = (error, req, res, next) => {
-  console.log(error.message)
-
-  if (error.name === 'CastError') {
-    return res.status(400).send({ error: 'malformatted id' })
-  } else if (error.name === 'ValidationError') {
-    return res.status(400).json({ error: error.message })
-  }
-  next(error)
-}
-
-app.use(errorHandler)
-
-const PORT = process.env.PORT || 3001
-app.listen(PORT, console.log('connected to port 3001'))
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, logger.info(`Server running on port ${config.PORT}`));
