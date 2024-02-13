@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const characterRouter = require('./controllers/character');
+const userRouter = require('./controllers/user');
 const logger = require('./utils/logger');
 const middleware = require('./utils/middleware');
 const mongoose = require('mongoose');
@@ -23,6 +24,7 @@ app.use(express.static('dist'));
 app.use(express.json());
 
 app.use('/api/character', characterRouter);
+app.use('/api/user', userRouter);
 
 app.use(middleware.requestLogger);
 app.use(middleware.unknownEndPoint);
