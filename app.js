@@ -2,11 +2,12 @@ const config = require('./utils/config');
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const mongoose = require('mongoose');
 const characterRouter = require('./controllers/character');
 const userRouter = require('./controllers/user');
+const loginRouter = require('./controllers/login');
 const logger = require('./utils/logger');
 const middleware = require('./utils/middleware');
-const mongoose = require('mongoose');
 
 mongoose.set('strictQuery', false);
 
@@ -25,6 +26,7 @@ app.use(express.json());
 
 app.use('/api/character', characterRouter);
 app.use('/api/user', userRouter);
+app.use('/api/login', loginRouter);
 
 app.use(middleware.requestLogger);
 app.use(middleware.unknownEndPoint);

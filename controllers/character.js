@@ -1,6 +1,15 @@
 const charactersRoute = require('express').Router();
 const Character = require('../models/character');
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
+
+const getTokenFrom = (req) => {
+  const authorization = req.get('authorization');
+  if (authorization && authorization.startsWith('Bearer ')) {
+    return authorization.replace('Bearer ', '');
+  }
+  return null;
+};
 
 charactersRoute.get('/', (req, res) => {
   Character.find({})
@@ -23,40 +32,61 @@ charactersRoute.get('/:id', (req, res, next) => {
     .catch((error) => next(error));
 });
 
-charactersRoute.post('/', (req, res, next) => {
+charactersRoute.post('/', async (req, res, next) => {
   const body = req.body;
 
-  User.findById(body.userId)
-    .then((user) => {
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
+  try {
+    const token = getTokenFrom(req);
 
-      if (!body.content) {
-        return res.status(400).json({ error: 'Content missing' });
-      }
+    const decryptToken = jwt.verify(token, process.env.SECRET);
 
-      const character = new Character({
-        content: body.content,
-        important: body.important || false,
-        user: user.id,
-      });
+    if (!decryptToken.id) {
+      return res.status(401).json({ error: 'Invalid Token!' });
+    }
 
-      return character
-        .save()
-        .then((saveChar) => {
-          user.characterList.push(saveChar._id);
-          return user.save();
-        })
-        .then((saveChar) => {
-          res.status(201).json(saveChar);
-        });
-    })
-    .catch((error) => {
-      next(error);
+    const user = await User.findById(decryptToken.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!body.content) {
+      return res.status(400).json({ error: 'Content missing' });
+    }
+
+    const character = new Character({
+      content: body.content,
+      important: body.important || false,
+      user: user.id,
     });
+
+    const savedCharacter = await character.save();
+
+    user.characterList.push(savedCharacter._id);
+    await user.save();
+
+    res.status(201).json(savedCharacter);
+  } catch (error) {
+    next(error);
+  }
 });
 
+charactersRoute.put('/:id', async (req, res, next) => {
+  const body = req.body;
+
+  try {
+    const char = {
+      content: body.content,
+      important: body.important,
+    };
+
+    const updateChar = await Character.findByIdAndUpdate(req.params.id, char, {
+      new: true,
+    });
+    res.json(updateChar);
+  } catch (error) {
+    next(error);
+  }
+});
 charactersRoute.put('/:id', (req, res, next) => {
   const body = req.body;
 
